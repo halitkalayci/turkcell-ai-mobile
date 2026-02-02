@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 
 import 'config/env.dart';
 
@@ -16,18 +15,13 @@ class AiMobileApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final router = _createRouter();
 
-    return MultiProvider(
-      providers: const [
-        // Add providers later (controllers/state) — keep empty for now.
-      ],
-      child: MaterialApp.router(
-        title: 'AI Mobile',
-        debugShowCheckedModeBanner: false,
-        routerConfig: router,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-          useMaterial3: true,
-        ),
+    return MaterialApp.router(
+      title: 'AI Mobile',
+      debugShowCheckedModeBanner: false,
+      routerConfig: router,
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        useMaterial3: true,
       ),
     );
   }
