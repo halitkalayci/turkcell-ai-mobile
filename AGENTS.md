@@ -50,3 +50,15 @@ If any detail is missing, ASK.
 - You MUST NOT add new OpenAPI generator dependencies without explicit approval.
 
 - If no generator is available, implement controllers/DTOs manually to match the spec.
+
+### 2.3) NO CONTRACT = NO CONTROLLER
+
+- **BEFORE creating ANY controller**, FIRST check `docs/openapi/` for existing contract.
+
+- If contract does NOT exist for the requested controller:
+  - STOP immediately
+  - WARN the user that OpenAPI contract is missing
+  - REQUEST the user to provide the contract first
+  - DO NOT generate any controller code
+
+- EXCEPTION: Non-API files (Application.java, config, utilities) can be created without contracts.
