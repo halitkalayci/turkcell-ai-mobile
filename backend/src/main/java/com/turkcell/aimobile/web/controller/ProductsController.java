@@ -1,4 +1,4 @@
-package com.turkcell.aimobile.controller;
+package com.turkcell.aimobile.web.controller;
 
 import com.turkcell.aimobile.application.ProductApplicationService;
 import com.turkcell.aimobile.dto.CreateProductRequest;
@@ -29,7 +29,6 @@ public class ProductsController {
             @RequestParam(defaultValue = "20") Integer size,
             @RequestParam(required = false) String q,
             @RequestParam(required = false) String sort) {
-        // Note: q filter not implemented at domain level yet; sort format "field:asc|desc"
         String sortBy = null;
         boolean asc = true;
         if (sort != null && !sort.isBlank()) {

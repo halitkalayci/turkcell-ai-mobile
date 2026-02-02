@@ -93,3 +93,39 @@ AI must never create new business rules implicitly.
 **Expected AI Behavior**
 - “No rule found in `/docs/business-rules`. Please define it before implementation.”
 - NOT: guessing, defaulting, or making assumptions.
+
+
+## 4) BACKEND (SPRING) ARCHITECTURE
+
+Each spring project MUST follow this layering
+
+`controller (web) -> application (use-cases) -> domain (business rules) -> infrastructure (persistence/clients/messaging etc..)`
+
+Each project MUST follow `Hexagonal Architecture` principles.
+
+### 4.1) Controller (web)
+
+- No business logic
+
+- Validates input, maps to application layer, return response DTOs.
+
+- NEVER returns JPA entities.
+
+
+### 4.2) Application (use-cases)
+
+- Orchestates use-cases, transaction, ports.
+
+- MUST BE unit-testable.
+
+### 4.3) Domain
+
+- Containes business invariants and domain model.
+
+- Avoid framework annotations in domain if possible.
+
+### 4.4) Infrastructure
+
+- JPA entities, repositories, external clients
+
+- No business rules!
