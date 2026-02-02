@@ -1,39 +1,45 @@
 package com.turkcell.aimobile.controller;
 
+import com.turkcell.aimobile.dto.CreateProductRequest;
+import com.turkcell.aimobile.dto.PagedProductResponse;
+import com.turkcell.aimobile.dto.ProductResponse;
+import com.turkcell.aimobile.dto.UpdateProductRequest;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/products")
+@RequestMapping("/api/v1/products")
 public class ProductsController {
 
     @GetMapping
-    public ResponseEntity<?> getAllProducts() {
+    public ResponseEntity<PagedProductResponse> listProducts(
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "20") Integer size,
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String sort) {
         // TODO: Implement
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(new PagedProductResponse());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getProductById(@PathVariable Long id) {
+    public ResponseEntity<ProductResponse> getProductById(@PathVariable String id) {
         // TODO: Implement
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(new ProductResponse());
     }
 
     @PostMapping
-    public ResponseEntity<?> createProduct(@RequestBody Object request) {
+    public ResponseEntity<ProductResponse> createProduct(@Valid @RequestBody CreateProductRequest request) {
         // TODO: Implement
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ProductResponse());
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateProduct(@PathVariable Long id, @RequestBody Object request) {
+    public ResponseEntity<ProductResponse> updateProduct(
+            @PathVariable String id,
+            @Valid @RequestBody UpdateProductRequest request) {
         // TODO: Implement
-        return ResponseEntity.ok().build();
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteProduct(@PathVariable Long id) {
-        // TODO: Implement
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(new ProductResponse());
     }
 }
