@@ -42,3 +42,11 @@ If any detail is missing, ASK.
 - API contracts live under: `docs/openapi`
 
 - Implementation MUST follow the contracts.
+
+### 2.2) Code Generation Policy
+
+- We may use OpenAPI tooling ONLY if already present in the repository.
+
+- You MUST NOT add new OpenAPI generator dependencies without explicit approval.
+
+- If no generator is available, implement controllers/DTOs manually to match the spec.
