@@ -24,3 +24,21 @@ Last Update: 2.02.2026
 - Comment only where intent is non-obvious.
 
 - DO NOT add comments on every line, only summary for functions/classes.
+
+### 1.4) NO INVENTING
+
+- endpoints, request/response fields, error models
+
+- event names/payloads
+
+- business rules
+
+If any detail is missing, ASK.
+
+## 2) CONTRACT FIRST
+
+### 2.1) OpenAPI is the source of truth
+
+- API contracts live under: `docs/openapi`
+
+- Implementation MUST follow the contracts.
