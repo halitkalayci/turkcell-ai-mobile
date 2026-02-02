@@ -46,8 +46,8 @@ public class ProductService {
         response.setItems(items);
         response.setPage(page);
         response.setSize(size);
-        response.setTotalItems(totalItems);
-        response.setTotalPages((long) totalPages);
+        response.setTotalItems((long) totalItems);
+        response.setTotalPages((int) totalPages);
 
         return response;
     }
