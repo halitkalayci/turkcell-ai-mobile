@@ -38,3 +38,4 @@ Decision
 Output Format
 - File Breakdown
 - Open Questions (if any)
+- If you have any recommendation to refactor AGENTS.md after this implementation with global rules, please suggest.

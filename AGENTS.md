@@ -129,3 +129,81 @@ Each project MUST follow `Hexagonal Architecture` principles.
 - JPA entities, repositories, external clients
 
 - No business rules!
+
+---
+
+## 5) FRONTEND (FLUTTER) ARCHITECTURE
+
+Flutter projects MUST follow layered, contract-first, SSOT principles mirroring the backend.
+
+Layering:
+
+`ui (widgets/screens) -> application (use-cases/controllers) -> domain (entities/value objects) -> infrastructure (api/storage adapters) -> core (contracts/mappers/errors/pagination) -> config (env/base-url)`
+
+### 5.1) UI (widgets/screens)
+
+- No business logic.
+- Uses `Provider` for state management (approved).
+- Navigation via `go_router` (approved).
+- Only interacts with `application` layer.
+- Never handles raw HTTP or persistence directly.
+
+### 5.2) Application (use-cases/controllers)
+
+- Orchestrates use-cases, maps to/from `domain`, calls `infrastructure` ports.
+- MUST be unit-testable.
+- No framework-specific UI code.
+
+### 5.3) Domain
+
+- Contains domain entities/value objects and invariants.
+- Avoid framework annotations.
+- No external dependencies.
+
+### 5.4) Infrastructure
+
+- Implements ports for API and storage.
+- No business rules.
+- HTTP client: `http` (approved baseline) for adapters.
+
+### 5.5) Core (SSOT)
+
+- Contracts (DTOs) mirrored from OpenAPI under `docs/openapi` and backend DTO names.
+- Mappers, error models, pagination helpers.
+- Core is the single source of truth for mobile types.
+
+### 5.6) Config
+
+- Environment configuration and base URLs.
+- Default base URL: `http://localhost:8080`.
+- Platform scope: **Android** and **Web** only (current).
+
+---
+
+## 6) MOBILE CONTRACT-FIRST RULES
+
+- Mobile DTOs MUST mirror `docs/openapi` contracts and backend DTO names exactly.
+- Source of truth: `docs/openapi/products-v1.yaml` and backend DTOs:
+  - `CreateProductRequest`, `UpdateProductRequest`, `ProductResponse`, `PagedProductResponse`, `ErrorResponse`.
+- NO CONTRACT = NO ADAPTER/CONTROLLER.
+- Any change to mobile types REQUIRES updating the OpenAPI contract first.
+
+---
+
+## 7) MOBILE DEPENDENCY APPROVAL FLOW
+
+- Approved baseline dependencies:
+  - State management: `provider`
+  - Navigation: `go_router`
+  - HTTP client: `http`
+- Any additional dependency MUST have explicit approval before inclusion.
+
+---
+
+## 8) SSOT ENFORCEMENT CHECKLIST (MOBILE)
+
+- Verify all mobile contract types against `docs/openapi/products-v1.yaml`.
+- Verify error codes against `docs/business-rules/` (e.g., `PRODUCT_NAME_ALREADY_EXISTS`, `CONFLICT`).
+- Verify pagination/query param names (`page`, `size`, `q`, `sort`) match the contract.
+- Prohibit endpoint/field invention in mobile.
+- Sync changes with contracts BEFORE implementation.

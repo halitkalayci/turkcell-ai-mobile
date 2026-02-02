@@ -1,0 +1,32 @@
+# Flutter/Dart
+.dart_tool/
+.packages
+.pub/
+build/
+coverage/
+.flutter-plugins
+.flutter-plugins-dependencies
+.fvm/
+
+# IDE & tooling
+.idea/
+.vscode/
+*.iml
+
+# OS & misc
+.DS_Store
+*.swp
+*.log
+
+# Android
+android/.gradle/
+android/local.properties
+android/app/key.properties
+android/app/*.keystore
+android/app/google-services.json
+android/gradle/wrapper/gradle-wrapper.jar
+
+# Web
+# build/ already ignored covers web outputs
+
+# Do NOT ignore pubspec.lock (apps should commit lockfile)

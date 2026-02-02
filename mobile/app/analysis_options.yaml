@@ -1,0 +1,18 @@
+analyzer:
+  language:
+    strict-inference: true
+    strict-raw-types: true
+  errors:
+    unused_import: error
+    dead_code: error
+    missing_required_argument: error
+    invalid_override: error
+    prefer_const_constructors: warning
+
+linter:
+  rules:
+    - always_declare_return_types
+    - avoid_print
+    - prefer_final_locals
+    - directives_ordering
+    - require_trailing_commas
