@@ -62,3 +62,34 @@ If any detail is missing, ASK.
   - DO NOT generate any controller code
 
 - EXCEPTION: Non-API files (Application.java, config, utilities) can be created without contracts.
+
+
+## 3) Business Rules Are Never Invented
+
+**Rule**  
+If any business rule is required while generating code, documentation, or tests:
+
+- ALWAYS check `/docs/business-rules/`
+- If a relevant rule exists, apply it exactly as defined
+- If no rule exists, DO NOT invent, assume, or infer a new rule
+- Instead, STOP and explicitly warn that the rule is missing
+
+AI must never create new business rules implicitly.
+
+**Why this in an enterprise project?**
+
+- Invented rules create:
+  - silent behavior changes
+  - inconsistent implementations
+  - hidden product decisions
+- In enterprise systems:
+  - business rules are **decisions**, not implementation details
+  - every rule must be reviewable, versioned, and approved
+- This rule enforces:
+  - a single source of truth for business behavior
+  - alignment between product, backend, mobile, and QA
+  - safe AI usage without accidental domain drift
+
+**Expected AI Behavior**
+- “No rule found in `/docs/business-rules`. Please define it before implementation.”
+- NOT: guessing, defaulting, or making assumptions.
