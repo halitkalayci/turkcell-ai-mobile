@@ -80,9 +80,5 @@ public class ProductApplicationService {
         return repository.save(current);
     }
 
-    public void delete(String id) {
-        // ensure exists for consistent semantics
-        getById(id);
-        repository.deleteById(id);
-    }
+    // Hard delete removed per BA guidance; prefer active/passive lifecycle.
 }

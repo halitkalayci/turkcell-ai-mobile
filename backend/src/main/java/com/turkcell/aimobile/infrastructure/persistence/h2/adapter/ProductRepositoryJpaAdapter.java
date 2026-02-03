@@ -30,7 +30,7 @@ public class ProductRepositoryJpaAdapter implements ProductRepositoryPort {
 
     @Override
     public Optional<Product> findById(String id) {
-        return jpaRepository.findById(id).map(mapper::toDomain);
+        return jpaRepository.findByIdAndIsActiveTrue(id).map(mapper::toDomain);
     }
 
     @Override
@@ -45,16 +45,16 @@ public class ProductRepositoryJpaAdapter implements ProductRepositoryPort {
 
     @Override
     public List<Product> findAll(int page, int size, String sortBy, boolean asc) {
-        Sort sort = Sort.by(asc ? Sort.Direction.ASC : Sort.Direction.DESC, sortBy == null ? "name" : sortBy);
-        return jpaRepository.findAll(PageRequest.of(page, size, sort))
+        Sort sort = Sort.by(asc ? Sort.Direction.ASC : Sort.Direction.DESC, sortBy == null ? "createdAt" : sortBy);
+        return jpaRepository.findByIsActiveTrue(PageRequest.of(page, size, sort))
                 .map(mapper::toDomain)
                 .getContent();
     }
 
     @Override
     public List<Product> search(String q, int page, int size, String sortBy, boolean asc) {
-        Sort sort = Sort.by(asc ? Sort.Direction.ASC : Sort.Direction.DESC, sortBy == null ? "name" : sortBy);
-        return jpaRepository.search(q, PageRequest.of(page, size, sort))
+        Sort sort = Sort.by(asc ? Sort.Direction.ASC : Sort.Direction.DESC, sortBy == null ? "createdAt" : sortBy);
+        return jpaRepository.searchActive(q, PageRequest.of(page, size, sort))
                 .map(mapper::toDomain)
                 .getContent();
     }
@@ -66,6 +66,6 @@ public class ProductRepositoryJpaAdapter implements ProductRepositoryPort {
 
     @Override
     public long count() {
-        return jpaRepository.count();
+        return jpaRepository.countByIsActiveTrue();
     }
 }

@@ -6,14 +6,29 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import java.util.Optional;
 
 public interface ProductJpaRepository extends JpaRepository<ProductEntity, String> {
     boolean existsByName(String name);
     boolean existsBySku(String sku);
 
-    @Query("SELECT p FROM ProductEntity p WHERE " +
+        @Query("SELECT p FROM ProductEntity p WHERE " +
             "LOWER(p.name) LIKE LOWER(CONCAT('%', :q, '%')) OR " +
             "LOWER(p.sku) LIKE LOWER(CONCAT('%', :q, '%')) OR " +
             "LOWER(p.description) LIKE LOWER(CONCAT('%', :q, '%'))")
-    Page<ProductEntity> search(@Param("q") String q, Pageable pageable);
+        Page<ProductEntity> search(@Param("q") String q, Pageable pageable);
+
+        // Active-only variants
+        Page<ProductEntity> findByIsActiveTrue(Pageable pageable);
+
+        @Query("SELECT p FROM ProductEntity p WHERE (" +
+            "LOWER(p.name) LIKE LOWER(CONCAT('%', :q, '%')) OR " +
+            "LOWER(p.sku) LIKE LOWER(CONCAT('%', :q, '%')) OR " +
+            "LOWER(p.description) LIKE LOWER(CONCAT('%', :q, '%'))" +
+            ") AND p.isActive = TRUE")
+        Page<ProductEntity> searchActive(@Param("q") String q, Pageable pageable);
+
+        Optional<ProductEntity> findByIdAndIsActiveTrue(String id);
+
+        long countByIsActiveTrue();
 }

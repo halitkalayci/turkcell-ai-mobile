@@ -51,16 +51,17 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ConflictException.class)
     public ResponseEntity<ErrorResponse> handleConflictException(ConflictException ex) {
         ErrorResponse errorResponse = new ErrorResponse();
-        String code = ex.getMessage();
-        errorResponse.setCode(code);
-        if ("PRODUCT_NAME_ALREADY_EXISTS".equals(code)) {
+        // Standardize external code to CONFLICT per BA/spec; keep domain reason in details
+        String domainCode = ex.getMessage();
+        errorResponse.setCode("CONFLICT");
+        if ("PRODUCT_NAME_ALREADY_EXISTS".equals(domainCode)) {
             errorResponse.setMessage("Product name already exists.");
-        } else if ("SKU_ALREADY_EXISTS".equals(code)) {
+        } else if ("SKU_ALREADY_EXISTS".equals(domainCode)) {
             errorResponse.setMessage("SKU already exists.");
         } else {
             errorResponse.setMessage("Conflict.");
         }
-        errorResponse.setDetails(List.of());
+        errorResponse.setDetails(List.of(domainCode));
         errorResponse.setCorrelationId(UUID.randomUUID().toString());
         errorResponse.setTimestamp(Instant.now());
 

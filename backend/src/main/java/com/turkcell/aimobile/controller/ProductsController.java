@@ -29,15 +29,16 @@ public class ProductsController {
             @RequestParam(defaultValue = "20") Integer size,
             @RequestParam(required = false) String q,
             @RequestParam(required = false) String sort) {
-        // Note: q filter not implemented at domain level yet; sort format "field:asc|desc"
         String sortBy = null;
-        boolean asc = true;
+        boolean asc = false; // default to DESC when sort is absent
         if (sort != null && !sort.isBlank()) {
-            String[] parts = sort.split(":");
-            sortBy = parts[0];
+            String[] parts = sort.contains(",") ? sort.split(",") : sort.split(":");
+            sortBy = parts[0].trim();
             if (parts.length > 1) {
-                asc = !"desc".equalsIgnoreCase(parts[1]);
+                asc = !"desc".equalsIgnoreCase(parts[1].trim());
             }
+        } else {
+            sortBy = "createdAt"; // default field per BA: latest first
         }
         var items = productService.list(page, size, q, sortBy, asc);
         long total = productService.count();
