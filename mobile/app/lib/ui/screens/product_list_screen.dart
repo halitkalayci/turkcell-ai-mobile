@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../application/product/product_controller.dart';
 import '../../domain/entities/product.dart';
+import '../../core/formatters/product_formatter.dart';
+import '../theme/app_colors.dart';
 import '../widgets/product_card.dart';
 
-/// Product listing screen with search and pagination.
+/// Product listing screen matching reference design.
 /// Per AGENTS.md Section 5.1: UI uses Provider for state, no business logic.
 /// Per BR-04: Only active products shown (enforced by API).
 /// Per BR-05: Default sort by createdAt:desc (enforced by API).
+/// Per styleguide.md Section 3: Uses AppColors design tokens.
 class ProductListScreen extends StatefulWidget {
   const ProductListScreen({super.key});
 
@@ -20,6 +24,8 @@ class _ProductListScreenState extends State<ProductListScreen> {
   final _searchController = TextEditingController();
   String _searchQuery = '';
   bool _isLoadingMore = false;
+  int _currentNavIndex = 0;
+  final Set<String> _favoriteIds = {};
 
   @override
   void initState() {
@@ -86,172 +92,317 @@ class _ProductListScreenState extends State<ProductListScreen> {
   void _onProductTap(Product product) {
     // TODO: Navigate to product detail when implemented
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Product tapped: ${product.name}')),
+      SnackBar(
+        content: Text('Product tapped: ${product.name}'),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 1),
+      ),
     );
+  }
+
+  void _onFavoritePressed(String productId) {
+    setState(() {
+      if (_favoriteIds.contains(productId)) {
+        _favoriteIds.remove(productId);
+      } else {
+        _favoriteIds.add(productId);
+      }
+    });
+  }
+
+  void _onNavItemTapped(int index) {
+    setState(() => _currentNavIndex = index);
+    // TODO: Implement navigation when other screens are ready
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Products'),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(72),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: _buildSearchBar(theme),
-          ),
-        ),
-      ),
-      body: Consumer<ProductController>(
-        builder: (context, controller, child) {
-          // Initial loading state
-          if (controller.isLoading && controller.products.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const CircularProgressIndicator(),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Loading products...',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurface.withOpacity(0.6),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          // Error state
-          if (controller.hasError && controller.products.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 64,
-                    color: colorScheme.error,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Error loading products',
-                    style: theme.textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    controller.error ?? 'Unknown error',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurface.withOpacity(0.6),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton.icon(
-                    onPressed: _onRefresh,
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Retry'),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          // Empty state
-          if (controller.products.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.inventory_2_outlined,
-                    size: 64,
-                    color: colorScheme.onSurface.withOpacity(0.3),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No products found',
-                    style: theme.textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _searchQuery.isEmpty
-                        ? 'No products available'
-                        : 'Try a different search',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurface.withOpacity(0.6),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          // Product grid
-          return RefreshIndicator(
-            onRefresh: _onRefresh,
-            child: GridView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(16),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 0.7,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-              ),
-              itemCount: controller.products.length + (_isLoadingMore ? 1 : 0),
-              itemBuilder: (context, index) {
-                // Loading indicator at bottom
-                if (index == controller.products.length) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
+      backgroundColor: AppColors.pageBackground,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Custom header
+            _buildHeader(theme),
+            
+            // Product grid
+            Expanded(
+              child: Consumer<ProductController>(
+                builder: (context, controller, child) {
+                  // Initial loading state
+                  if (controller.isLoading && controller.products.isEmpty) {
+                    return const Center(
                       child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: colorScheme.primary,
+                        color: AppColors.textPrimary,
                       ),
+                    );
+                  }
+
+                  // Error state
+                  if (controller.hasError && controller.products.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            size: 64,
+                            color: AppColors.iconInactive,
+                          ),
+                          const SizedBox(height: AppColors.spacingStandard),
+                          Text(
+                            'Error loading products',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          ElevatedButton(
+                            onPressed: _onRefresh,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.buttonBackground,
+                              foregroundColor: AppColors.buttonForeground,
+                            ),
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  // Empty state
+                  if (controller.products.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.inventory_2_outlined,
+                            size: 64,
+                            color: AppColors.iconPlaceholder,
+                          ),
+                          const SizedBox(height: AppColors.spacingStandard),
+                          Text(
+                            'No products found',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  // Product grid
+                  return RefreshIndicator(
+                    onRefresh: _onRefresh,
+                    color: AppColors.textPrimary,
+                    child: GridView.builder(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppColors.spacingStandard, 
+                        vertical: AppColors.spacingSmall,
+                      ),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        childAspectRatio: 0.65,
+                        crossAxisSpacing: AppColors.spacingGrid,
+                        mainAxisSpacing: AppColors.spacingGrid,
+                      ),
+                      itemCount: controller.products.length + (_isLoadingMore ? 2 : 0),
+                      itemBuilder: (context, index) {
+                        // Loading indicator at bottom
+                        if (index >= controller.products.length) {
+                          return const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(AppColors.spacingStandard),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                          );
+                        }
+
+                        final product = controller.products[index];
+                        return ProductCard(
+                          product: product,
+                          isFavorite: _favoriteIds.contains(product.id),
+                          onTap: () => _onProductTap(product),
+                          onFavoritePressed: () => _onFavoritePressed(product.id),
+                        );
+                      },
                     ),
                   );
-                }
-
-                final product = controller.products[index];
-                return ProductCard(
-                  product: product,
-                  onTap: () => _onProductTap(product),
-                );
-              },
+                },
+              ),
             ),
-          );
-        },
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => context.push('/products/add'),
+        backgroundColor: AppColors.buttonBackground,
+        foregroundColor: AppColors.buttonForeground,
+        child: const Icon(Icons.add),
+      ),
+      bottomNavigationBar: _buildBottomNavBar(),
+    );
+  }
+
+  Widget _buildHeader(ThemeData theme) {
+    final controller = context.watch<ProductController>();
+    final productCount = controller.totalItems;
+
+    return Container(
+      color: AppColors.pageBackground,
+      padding: const EdgeInsets.all(AppColors.spacingStandard),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Top row: Menu + Search
+          Row(
+            children: [
+              // Hamburger menu
+              IconButton(
+                icon: const Icon(Icons.menu, color: AppColors.iconDefault),
+                onPressed: () {
+                  // TODO: Open drawer/menu
+                },
+              ),
+              const SizedBox(width: AppColors.spacingSmall),
+              
+              // Search bar
+              Expanded(
+                child: Container(
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: AppColors.searchBarBackground,
+                    borderRadius: BorderRadius.circular(AppColors.radiusSearchBar),
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Search product',
+                      hintStyle: TextStyle(
+                        color: AppColors.textHint,
+                        fontSize: 14,
+                      ),
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: AppColors.textHint,
+                        size: 20,
+                      ),
+                      suffixIcon: _searchQuery.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear, size: 20),
+                              onPressed: () {
+                                _searchController.clear();
+                                _onSearchChanged('');
+                                _onSearchSubmitted('');
+                              },
+                            )
+                          : null,
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: AppColors.spacingStandard,
+                        vertical: 14,
+                      ),
+                    ),
+                    textInputAction: TextInputAction.search,
+                    onChanged: _onSearchChanged,
+                    onSubmitted: _onSearchSubmitted,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 20),
+          
+          // Title + Icons row
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Sneakers',
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                        fontSize: 32,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      ProductFormatter.formatProductCount(productCount),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: AppColors.iconInactive,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Sort icon
+              IconButton(
+                icon: const Icon(Icons.sort, color: AppColors.iconDefault),
+                onPressed: () {
+                  // TODO: Show sort options
+                },
+              ),
+              
+              // Filter icon
+              IconButton(
+                icon: const Icon(Icons.filter_list, color: AppColors.iconDefault),
+                onPressed: () {
+                  // TODO: Show filter options
+                },
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildSearchBar(ThemeData theme) {
-    return TextField(
-      controller: _searchController,
-      decoration: InputDecoration(
-        hintText: 'Search products...',
-        prefixIcon: const Icon(Icons.search),
-        suffixIcon: _searchQuery.isNotEmpty
-            ? IconButton(
-                icon: const Icon(Icons.clear),
-                onPressed: () {
-                  _searchController.clear();
-                  _onSearchChanged('');
-                  _onSearchSubmitted('');
-                },
-              )
-            : null,
+  Widget _buildBottomNavBar() {
+    return Container(
+      height: 65,
+      decoration: BoxDecoration(
+        color: AppColors.navBackground,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(AppColors.radiusNavBar),
+          topRight: Radius.circular(AppColors.radiusNavBar),
+        ),
       ),
-      textInputAction: TextInputAction.search,
-      onChanged: _onSearchChanged,
-      onSubmitted: _onSearchSubmitted,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildNavItem(Icons.grid_view, 0),
+          _buildNavItem(Icons.list, 1),
+          _buildNavItem(Icons.shopping_bag_outlined, 2),
+          _buildNavItem(Icons.favorite_border, 3),
+          _buildNavItem(Icons.person_outline, 4),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNavItem(IconData icon, int index) {
+    final isSelected = _currentNavIndex == index;
+    return IconButton(
+      icon: Icon(
+        icon,
+        color: isSelected ? AppColors.navItemActive : AppColors.navItemInactive,
+        size: 24,
+      ),
+      onPressed: () => _onNavItemTapped(index),
     );
   }
 }
