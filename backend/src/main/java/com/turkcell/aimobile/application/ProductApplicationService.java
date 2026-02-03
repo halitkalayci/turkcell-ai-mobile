@@ -1,6 +1,7 @@
 package com.turkcell.aimobile.application;
 
 import com.turkcell.aimobile.domain.port.ProductRepositoryPort;
+import com.turkcell.aimobile.domain.port.CategoryRepositoryPort;
 import com.turkcell.aimobile.domain.service.ProductDomainService;
 import com.turkcell.aimobile.exception.ProductNotFoundException;
 import com.turkcell.aimobile.model.Product;
@@ -16,12 +17,15 @@ import java.util.Objects;
 public class ProductApplicationService {
 
     private final ProductRepositoryPort repository;
+    private final CategoryRepositoryPort categoryRepository;
     private final ProductDomainService domainService;
 
     public ProductApplicationService(ProductRepositoryPort repository,
-                                     ProductDomainService domainService) {
+                                     ProductDomainService domainService,
+                                     CategoryRepositoryPort categoryRepository) {
         this.repository = Objects.requireNonNull(repository, "repository");
         this.domainService = Objects.requireNonNull(domainService, "domainService");
+        this.categoryRepository = Objects.requireNonNull(categoryRepository, "categoryRepository");
     }
 
     public List<Product> list(int page, int size, String sortBy, boolean asc) {
@@ -68,6 +72,11 @@ public class ProductApplicationService {
         // business rules
         domainService.ensureUniqueName(product.getName());
         domainService.ensureUniqueSku(product.getSku());
+        // BR-06: ensure category exists and is active
+        if (product.getCategoryId() == null || product.getCategoryId().isBlank() ||
+                !categoryRepository.existsByIdAndIsActiveTrue(product.getCategoryId())) {
+            throw new IllegalArgumentException("Invalid or inactive categoryId");
+        }
         // generation responsibilities here to avoid web doing it
         if (product.getCreatedAt() == null) {
             product.setCreatedAt(Instant.now());
@@ -95,6 +104,15 @@ public class ProductApplicationService {
         }
         if (changes.getCurrency() != null) {
             current.setCurrency(changes.getCurrency());
+        }
+        if (changes.getCategoryId() != null && !changes.getCategoryId().isBlank()) {
+            if (!categoryRepository.existsByIdAndIsActiveTrue(changes.getCategoryId())) {
+                throw new IllegalArgumentException("Invalid or inactive categoryId");
+            }
+            current.setCategoryId(changes.getCategoryId());
+        }
+        if (changes.getImageUrl() != null) {
+            current.setImageUrl(changes.getImageUrl());
         }
         current.setUpdatedAt(Instant.now());
         return repository.save(current);
