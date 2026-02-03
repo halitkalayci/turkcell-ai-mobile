@@ -7,6 +7,8 @@ import 'application/product/product_controller.dart';
 import 'application/category/category_controller.dart';
 import 'infrastructure/repositories/product_repository_adapter.dart';
 import 'infrastructure/repositories/category_repository_adapter.dart';
+import 'ui/theme/app_theme.dart';
+import 'ui/screens/product_list_screen.dart';
 
 /// Main entry point for Turkcell AI Mobile app.
 /// Per AGENTS.md Section 5: Hexagonal architecture with Provider + go_router.
@@ -36,10 +38,9 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp.router(
         title: AppConfig.appName,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-          useMaterial3: true,
-        ),
+        theme: AppTheme.light,
+        darkTheme: AppTheme.dark,
+        themeMode: ThemeMode.system,
         routerConfig: _router,
         debugShowCheckedModeBanner: AppConfig.isDevelopment,
       ),
@@ -48,18 +49,17 @@ class MyApp extends StatelessWidget {
 }
 
 /// Router configuration using go_router (approved navigation - AGENTS.md).
-/// Routes will be expanded when UI layer is implemented.
+/// Per user request: App opens with Product List screen by default.
 final GoRouter _router = GoRouter(
   initialLocation: '/',
   routes: [
     GoRoute(
       path: '/',
-      builder: (context, state) => const PlaceholderHomePage(),
+      builder: (context, state) => const ProductListScreen(),
     ),
-    // Future routes (when UI is implemented):
+    // Future routes (when implemented):
     // GoRoute(path: '/categories', builder: (context, state) => CategoriesListScreen()),
     // GoRoute(path: '/categories/:id', builder: (context, state) => CategoryDetailScreen()),
-    // GoRoute(path: '/products', builder: (context, state) => ProductsListScreen()),
     // GoRoute(path: '/products/:id', builder: (context, state) => ProductDetailScreen()),
   ],
 );
