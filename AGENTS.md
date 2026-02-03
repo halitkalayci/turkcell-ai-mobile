@@ -207,3 +207,17 @@ Layering:
 - Verify pagination/query param names (`page`, `size`, `q`, `sort`) match the contract.
 - Prohibit endpoint/field invention in mobile.
 - Sync changes with contracts BEFORE implementation.
+
+---
+
+## 9) Business Rules Enforcement (Backend & Mobile)
+
+- Source of truth: All business behavior MUST be defined under `docs/business-rules/` before any implementation.
+- Required workflow:
+  - BEFORE changing controllers/adapters/services, verify corresponding rule files exist and fully cover the current analysis needs.
+  - If rules are missing or incomplete, CREATE/UPDATE files in `docs/business-rules/` first. **NO RULE = NO IMPLEMENTATION.**
+  - Use stable rule IDs (e.g., `BR-04`, `CAT-02`, `REL-01`) and reference them in PR descriptions and changelogs.
+  - Error-code policy: External API codes (`CONFLICT`, `VALIDATION_ERROR`, `NOT_FOUND`) are authoritative. Domain reasons (e.g., `PRODUCT_NAME_ALREADY_EXISTS`, `SKU_ALREADY_EXISTS`) go into `details`.
+- Review gate:
+  - CI must fail if a controller/adapter references behavior not present in `docs/business-rules/`.
+  - Contract-first remains mandatory: NO CONTRACT = NO CONTROLLER.
