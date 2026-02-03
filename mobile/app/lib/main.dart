@@ -8,8 +8,9 @@ import 'application/category/category_controller.dart';
 import 'infrastructure/repositories/product_repository_adapter.dart';
 import 'infrastructure/repositories/category_repository_adapter.dart';
 import 'ui/theme/app_theme.dart';
-import 'ui/screens/product_list_screen.dart';
+import 'ui/screens/home_screen.dart';
 import 'ui/screens/product_add_screen.dart';
+import 'ui/screens/category_add_screen.dart';
 
 /// Main entry point for Turkcell AI Mobile app.
 /// Per AGENTS.md Section 5: Hexagonal architecture with Provider + go_router.
@@ -56,14 +57,17 @@ final GoRouter _router = GoRouter(
   routes: [
     GoRoute(
       path: '/',
-      builder: (context, state) => const ProductListScreen(),
+      builder: (context, state) => const HomeScreen(),
     ),
     GoRoute(
       path: '/products/add',
       builder: (context, state) => const ProductAddScreen(),
     ),
+    GoRoute(
+      path: '/categories/add',
+      builder: (context, state) => const CategoryAddScreen(),
+    ),
     // Future routes (when implemented):
-    // GoRoute(path: '/categories', builder: (context, state) => CategoriesListScreen()),
     // GoRoute(path: '/categories/:id', builder: (context, state) => CategoryDetailScreen()),
     // GoRoute(path: '/products/:id', builder: (context, state) => ProductDetailScreen()),
   ],

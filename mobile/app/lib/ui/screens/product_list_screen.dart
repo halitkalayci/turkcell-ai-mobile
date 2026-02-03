@@ -24,7 +24,6 @@ class _ProductListScreenState extends State<ProductListScreen> {
   final _searchController = TextEditingController();
   String _searchQuery = '';
   bool _isLoadingMore = false;
-  int _currentNavIndex = 0;
   final Set<String> _favoriteIds = {};
 
   @override
@@ -110,10 +109,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
     });
   }
 
-  void _onNavItemTapped(int index) {
-    setState(() => _currentNavIndex = index);
-    // TODO: Implement navigation when other screens are ready
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -248,7 +244,6 @@ class _ProductListScreenState extends State<ProductListScreen> {
         foregroundColor: AppColors.buttonForeground,
         child: const Icon(Icons.add),
       ),
-      bottomNavigationBar: _buildBottomNavBar(),
     );
   }
 
@@ -371,38 +366,4 @@ class _ProductListScreenState extends State<ProductListScreen> {
     );
   }
 
-  Widget _buildBottomNavBar() {
-    return Container(
-      height: 65,
-      decoration: BoxDecoration(
-        color: AppColors.navBackground,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(AppColors.radiusNavBar),
-          topRight: Radius.circular(AppColors.radiusNavBar),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildNavItem(Icons.grid_view, 0),
-          _buildNavItem(Icons.list, 1),
-          _buildNavItem(Icons.shopping_bag_outlined, 2),
-          _buildNavItem(Icons.favorite_border, 3),
-          _buildNavItem(Icons.person_outline, 4),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem(IconData icon, int index) {
-    final isSelected = _currentNavIndex == index;
-    return IconButton(
-      icon: Icon(
-        icon,
-        color: isSelected ? AppColors.navItemActive : AppColors.navItemInactive,
-        size: 24,
-      ),
-      onPressed: () => _onNavItemTapped(index),
-    );
-  }
 }

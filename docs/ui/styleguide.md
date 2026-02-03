@@ -168,3 +168,112 @@ ProductFormatter.formatProductCount(count);
 - **Testable** - Unit test formatting without widget tests
 - **Consistent** - Same format everywhere in app
 - **Maintainable** - Change format in one place
+
+---
+
+## 5) FORM COMPONENTS (STRICT)
+
+### 5.1 Input Field Height
+
+All form inputs (TextField, Dropdown, etc.) MUST use consistent heights.
+
+| Component | Height | Token |
+|-----------|--------|-------|
+| TextField | 56px | `AppColors.inputHeight` |
+| Dropdown | 56px | `AppColors.inputHeight` |
+| Switch Container | Auto | Min height 56px |
+
+**Why fixed heights?**
+- Horizontal alignment when inputs are side-by-side
+- Visual consistency across all forms
+- Predictable layout behavior
+
+### 5.2 Switch/Toggle Colors
+
+All switches MUST use the same active color across the app.
+
+| State | Token | Color |
+|-------|-------|-------|
+| Active | `AppColors.switchActiveColor` | Black |
+| Inactive | Default Material | Grey |
+
+```dart
+// ✅ CORRECT
+Switch(
+  value: _isActive,
+  onChanged: (v) => setState(() => _isActive = v),
+  activeColor: AppColors.switchActiveColor,
+)
+
+// ❌ WRONG - Using theme.colorScheme.primary or hardcoded colors
+Switch(
+  activeColor: theme.colorScheme.primary,  // FORBIDDEN - inconsistent
+)
+```
+
+### 5.3 Input Text Colors
+
+All input fields MUST use explicit text colors for entered text.
+
+| Element | Token | Color |
+|---------|-------|-------|
+| User-entered text | `AppColors.inputTextColor` | Black |
+| Placeholder/hint | `AppColors.textHint` | Grey[500] |
+
+```dart
+// ✅ CORRECT - Explicit input text color
+TextFormField(
+  style: const TextStyle(color: AppColors.inputTextColor),
+  decoration: InputDecoration(
+    hintStyle: TextStyle(color: AppColors.textHint),
+  ),
+)
+
+// ❌ WRONG - Relying on theme default (may be low contrast)
+TextFormField(
+  decoration: InputDecoration(...),  // No style property
+)
+```
+
+### 5.4 Dropdown Styling
+
+All dropdowns MUST use explicit colors for background and text.
+
+| Element | Property/Token | Value |
+|---------|----------------|-------|
+| Menu background | `dropdownColor` | `AppColors.cardBackground` (white) |
+| Selected value text | `AppColors.textPrimary` | Black |
+| Placeholder/hint | `AppColors.textHint` | Grey |
+| Dropdown item text | `AppColors.textPrimary` | Black |
+| Icon | `AppColors.iconInactive` | Grey |
+
+```dart
+// ✅ CORRECT - Explicit dropdown background and text colors
+DropdownButton<String>(
+  dropdownColor: AppColors.cardBackground,  // WHITE background for menu
+  items: items.map((item) => DropdownMenuItem(
+    child: Text(item, style: TextStyle(color: AppColors.textPrimary)),
+  )).toList(),
+)
+
+// ❌ WRONG - Relying on theme (menu background may be dark)
+DropdownButton<String>(
+  items: items.map((item) => DropdownMenuItem(
+    child: Text(item),  // No dropdownColor = unreadable on dark themes
+  )).toList(),
+)
+```
+
+### 5.5 Text Contrast Requirements
+
+All text MUST meet WCAG AA contrast requirements (4.5:1 for normal text).
+
+| Token | Minimum Contrast | Usage |
+|-------|------------------|-------|
+| `textPrimary` | 7:1+ | Headings, prices, labels |
+| `textSecondary` | 4.5:1+ | Descriptions, subtitles |
+| `textHint` | 3:1+ | Placeholders (relaxed for hints) |
+
+**Forbidden:**
+- Using `grey[400]` or lighter for readable text
+- Using opacity < 0.6 on text that should be read

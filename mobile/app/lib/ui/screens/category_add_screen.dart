@@ -1,46 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import '../../application/product/product_controller.dart';
 import '../../application/category/category_controller.dart';
-import '../../domain/entities/product.dart';
-import '../../core/validators/product_validator.dart';
+import '../../domain/entities/category.dart';
+import '../../core/validators/category_validator.dart';
 import '../theme/app_colors.dart';
-import '../widgets/image_url_input.dart';
 
-/// Product add/create screen.
+/// Category add/create screen.
 /// Per AGENTS.md Section 5.1: UI layer has no business logic.
-/// Validations per products-v2.yaml and business-rules/product.rules.md
-class ProductAddScreen extends StatefulWidget {
-  const ProductAddScreen({super.key});
+/// Validations per categories-v1.yaml and business-rules/category.rules.md
+/// 
+/// Business Rules Applied:
+/// - CAT-01: Name unique within parent (backend validates)
+/// - CAT-04: Child cannot be active if parent passive (backend validates)
+/// - CAT-05: Ordering for display order
+class CategoryAddScreen extends StatefulWidget {
+  const CategoryAddScreen({super.key});
 
   @override
-  State<ProductAddScreen> createState() => _ProductAddScreenState();
+  State<CategoryAddScreen> createState() => _CategoryAddScreenState();
 }
 
-class _ProductAddScreenState extends State<ProductAddScreen> {
+class _CategoryAddScreenState extends State<CategoryAddScreen> {
   final _formKey = GlobalKey<FormState>();
   
   // Controllers
   final _nameController = TextEditingController();
-  final _skuController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _priceController = TextEditingController();
-  final _imageUrlController = TextEditingController();
+  final _orderingController = TextEditingController(text: '0');
   
   // Form state
-  String _selectedCurrency = 'TRY';
-  String? _selectedCategoryId;
+  String? _selectedParentId;
   bool _isActive = true;
   bool _isSubmitting = false;
-
-  // Currency options
-  final List<String> _currencies = ['TRY', 'USD', 'EUR', 'GBP'];
 
   @override
   void initState() {
     super.initState();
-    // Load categories for dropdown
+    // Load categories for parent dropdown
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<CategoryController>().listCategories();
     });
@@ -49,10 +46,8 @@ class _ProductAddScreenState extends State<ProductAddScreen> {
   @override
   void dispose() {
     _nameController.dispose();
-    _skuController.dispose();
     _descriptionController.dispose();
-    _priceController.dispose();
-    _imageUrlController.dispose();
+    _orderingController.dispose();
     super.dispose();
   }
 
@@ -61,52 +56,42 @@ class _ProductAddScreenState extends State<ProductAddScreen> {
       return;
     }
 
-    if (_selectedCategoryId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a category'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
-
     setState(() => _isSubmitting = true);
 
-    final product = Product(
+    final category = Category(
       id: '', // Will be assigned by backend
       name: _nameController.text.trim(),
-      sku: _skuController.text.trim(),
-      description: _descriptionController.text.trim(),
-      price: ProductValidator.parsePrice(_priceController.text) ?? 0,
-      currency: _selectedCurrency,
-      isActive: _isActive,
-      categoryId: _selectedCategoryId!,
-      imageUrl: _imageUrlController.text.trim().isEmpty 
+      description: _descriptionController.text.trim().isEmpty 
           ? null 
-          : _imageUrlController.text.trim(),
+          : _descriptionController.text.trim(),
+      parentId: _selectedParentId,
+      ordering: CategoryValidator.parseOrdering(_orderingController.text),
+      isActive: _isActive,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
 
-    final controller = context.read<ProductController>();
-    final success = await controller.createProduct(product);
+    final controller = context.read<CategoryController>();
+    final success = await controller.createCategory(category);
 
     setState(() => _isSubmitting = false);
 
     if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Product created successfully!'),
+          content: const Text('Category created successfully!'),
           behavior: SnackBarBehavior.floating,
           backgroundColor: Theme.of(context).colorScheme.primary,
         ),
       );
       Navigator.of(context).pop(true);
     } else if (mounted) {
+      // Error messages handled by controller based on error codes
+      // CAT-01: CATEGORY_NAME_ALREADY_EXISTS
+      // CAT-04: PARENT_CATEGORY_PASSIVE
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(controller.error ?? 'Failed to create product'),
+          content: Text(controller.error ?? 'Failed to create category'),
           behavior: SnackBarBehavior.floating,
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
@@ -128,7 +113,7 @@ class _ProductAddScreenState extends State<ProductAddScreen> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          'Add Product',
+          'Add Category',
           style: theme.textTheme.titleLarge?.copyWith(
             color: AppColors.textPrimary,
             fontWeight: FontWeight.bold,
@@ -143,28 +128,17 @@ class _ProductAddScreenState extends State<ProductAddScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Image URL input with preview
-              ImageUrlInput(controller: _imageUrlController),
+              // Category icon placeholder
+              _buildCategoryIcon(),
               
               const SizedBox(height: 24),
               
-              // Product Name (Required)
+              // Category Name (Required)
               _buildTextField(
                 controller: _nameController,
-                label: 'Product Name *',
-                hint: 'Enter product name',
-                validator: ProductValidator.validateName,
-                textInputAction: TextInputAction.next,
-              ),
-              
-              const SizedBox(height: 16),
-              
-              // SKU (Optional)
-              _buildTextField(
-                controller: _skuController,
-                label: 'SKU (Optional)',
-                hint: 'e.g., PROD-001',
-                validator: ProductValidator.validateSku,
+                label: 'Category Name *',
+                hint: 'Enter category name',
+                validator: CategoryValidator.validateName,
                 textInputAction: TextInputAction.next,
               ),
               
@@ -174,53 +148,62 @@ class _ProductAddScreenState extends State<ProductAddScreen> {
               _buildTextField(
                 controller: _descriptionController,
                 label: 'Description (Optional)',
-                hint: 'Enter product description',
-                validator: ProductValidator.validateDescription,
+                hint: 'Enter category description',
+                validator: CategoryValidator.validateDescription,
                 maxLines: 3,
                 textInputAction: TextInputAction.next,
               ),
               
               const SizedBox(height: 16),
               
-              // Price and Currency row
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Price
-                  Expanded(
-                    flex: 2,
-                    child: _buildTextField(
-                      controller: _priceController,
-                      label: 'Price *',
-                      hint: '0.00',
-                      validator: ProductValidator.validatePrice,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
-                      ],
-                      textInputAction: TextInputAction.next,
-                    ),
-                  ),
-                  
-                  const SizedBox(width: 12),
-                  
-                  // Currency dropdown
-                  Expanded(
-                    flex: 1,
-                    child: _buildCurrencyDropdown(theme),
-                  ),
-                ],
-              ),
+              // Parent Category dropdown
+              _buildParentCategoryDropdown(theme),
               
               const SizedBox(height: 16),
               
-              // Category dropdown
-              _buildCategoryDropdown(theme),
+              // Ordering field
+              _buildTextField(
+                controller: _orderingController,
+                label: 'Display Order',
+                hint: '0',
+                validator: CategoryValidator.validateOrdering,
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                ],
+                textInputAction: TextInputAction.done,
+              ),
+              
+              const SizedBox(height: 8),
+              
+              // Ordering helper text
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Text(
+                  'Lower numbers appear first in the list',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
               
               const SizedBox(height: 16),
               
               // Active switch
               _buildActiveSwitch(theme),
+              
+              const SizedBox(height: 8),
+              
+              // Active helper text (CAT-02, CAT-04)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Text(
+                  'Inactive categories are hidden from the app',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
               
               const SizedBox(height: 32),
               
@@ -247,7 +230,7 @@ class _ProductAddScreenState extends State<ProductAddScreen> {
                           ),
                         )
                       : const Text(
-                          'Create Product',
+                          'Create Category',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -259,6 +242,28 @@ class _ProductAddScreenState extends State<ProductAddScreen> {
               const SizedBox(height: 16),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryIcon() {
+    return Center(
+      child: Container(
+        width: 100,
+        height: 100,
+        decoration: BoxDecoration(
+          color: AppColors.cardBackground,
+          borderRadius: BorderRadius.circular(AppColors.radiusCard),
+          border: Border.all(
+            color: AppColors.textHint.withOpacity(0.3),
+            width: 2,
+          ),
+        ),
+        child: Icon(
+          Icons.category_outlined,
+          size: 48,
+          color: AppColors.iconPlaceholder,
         ),
       ),
     );
@@ -326,90 +331,23 @@ class _ProductAddScreenState extends State<ProductAddScreen> {
     );
   }
 
-  Widget _buildCurrencyDropdown(ThemeData theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Currency *',
-          style: theme.textTheme.titleSmall?.copyWith(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          height: AppColors.inputHeight,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            color: AppColors.cardBackground,
-            borderRadius: BorderRadius.circular(AppColors.radiusSearchBar),
-            border: Border.all(color: AppColors.textHint.withOpacity(0.3)),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: _selectedCurrency,
-              isExpanded: true,
-              dropdownColor: AppColors.cardBackground,
-              icon: Icon(Icons.arrow_drop_down, color: AppColors.iconInactive),
-              items: _currencies.map((currency) {
-                return DropdownMenuItem(
-                  value: currency,
-                  child: Text(
-                    currency,
-                    style: TextStyle(color: AppColors.textPrimary),
-                  ),
-                );
-              }).toList(),
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() => _selectedCurrency = value);
-                }
-              },
+  Widget _buildParentCategoryDropdown(ThemeData theme) {
+    return Consumer<CategoryController>(
+      builder: (context, controller, _) {
+        final categories = controller.categories;
+        
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Parent Category (Optional)',
+              style: theme.textTheme.titleSmall?.copyWith(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w500,
+              ),
             ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCategoryDropdown(ThemeData theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Category *',
-          style: theme.textTheme.titleSmall?.copyWith(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Consumer<CategoryController>(
-          builder: (context, controller, child) {
-            if (controller.isLoading) {
-              return Container(
-                height: AppColors.inputHeight,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                decoration: BoxDecoration(
-                  color: AppColors.cardBackground,
-                  borderRadius: BorderRadius.circular(AppColors.radiusSearchBar),
-                  border: Border.all(color: AppColors.textHint.withOpacity(0.3)),
-                ),
-                child: const Center(
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                ),
-              );
-            }
-
-            final categories = controller.categories;
-            
-            return Container(
-              height: AppColors.inputHeight,
+            const SizedBox(height: 8),
+            Container(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
                 color: AppColors.cardBackground,
@@ -417,42 +355,62 @@ class _ProductAddScreenState extends State<ProductAddScreen> {
                 border: Border.all(color: AppColors.textHint.withOpacity(0.3)),
               ),
               child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  value: _selectedCategoryId,
+                child: DropdownButton<String?>(
+                  value: _selectedParentId,
                   isExpanded: true,
                   dropdownColor: AppColors.cardBackground,
                   hint: Text(
-                    'Select a category',
+                    'No parent (root category)',
                     style: TextStyle(color: AppColors.textHint),
                   ),
                   icon: Icon(Icons.arrow_drop_down, color: AppColors.iconInactive),
-                  items: categories.map((category) {
-                    return DropdownMenuItem(
-                      value: category.id,
+                  items: [
+                    // Null option for root category
+                    DropdownMenuItem<String?>(
+                      value: null,
                       child: Text(
-                        category.name,
+                        'No parent (root category)',
                         style: TextStyle(color: AppColors.textPrimary),
                       ),
-                    );
-                  }).toList(),
+                    ),
+                    // Active categories as possible parents
+                    ...categories.map((category) {
+                      return DropdownMenuItem<String?>(
+                        value: category.id,
+                        child: Text(
+                          category.name,
+                          style: TextStyle(color: AppColors.textPrimary),
+                        ),
+                      );
+                    }),
+                  ],
                   onChanged: (value) {
-                    setState(() => _selectedCategoryId = value);
+                    setState(() {
+                      _selectedParentId = value;
+                    });
                   },
                 ),
               ),
-            );
-          },
-        ),
-      ],
+            ),
+            if (controller.isLoading)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  'Loading categories...',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 
   Widget _buildActiveSwitch(ThemeData theme) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 12,
-      ),
+      padding: const EdgeInsets.all(AppColors.spacingCard),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(AppColors.radiusSearchBar),
@@ -471,9 +429,9 @@ class _ProductAddScreenState extends State<ProductAddScreen> {
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 4),
               Text(
-                'Product will be visible to customers',
+                _isActive ? 'Visible in app' : 'Hidden from app',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: AppColors.textSecondary,
                 ),
@@ -483,7 +441,9 @@ class _ProductAddScreenState extends State<ProductAddScreen> {
           Switch(
             value: _isActive,
             onChanged: (value) {
-              setState(() => _isActive = value);
+              setState(() {
+                _isActive = value;
+              });
             },
             activeColor: AppColors.switchActiveColor,
           ),

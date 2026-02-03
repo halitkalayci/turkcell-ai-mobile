@@ -95,6 +95,7 @@ class _ImageUrlInputState extends State<ImageUrlInput> {
         // URL input field
         TextFormField(
           controller: widget.controller,
+          style: const TextStyle(color: AppColors.inputTextColor),
           decoration: InputDecoration(
             hintText: 'https://example.com/image.jpg',
             hintStyle: TextStyle(color: AppColors.textHint),
