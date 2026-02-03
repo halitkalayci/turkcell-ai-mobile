@@ -221,3 +221,9 @@ Layering:
 - Review gate:
   - CI must fail if a controller/adapter references behavior not present in `docs/business-rules/`.
   - Contract-first remains mandatory: NO CONTRACT = NO CONTROLLER.
+
+## 10) STYLING MANDATORY WORKFLOW
+
+- For any styling you MUST follow the rules under [styleguide.md](docs/ui/styleguide.md)
+
+- If any detail is missing in `styleguide.md`, do NOT invent any UI rule, stop and ask.

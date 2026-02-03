@@ -44,4 +44,24 @@ Use colors by intent, not by appearance.
 | Intent | Source (M3) | Typical Usage |
 | ------ | ----------- | ------------- |
 | Primary Action | `colorScheme.primary` + `onPrimary` | Primary buttons, key actions |
-| 
+| Secondary Action | `colorScheme.secondary` + `onSecondary` | Secondary buttons |
+| Surface | `colorScheme.surface` + `onSurface` | Cards, pages |
+| Success | `semantic.success` + `semantic.onSuccess` | Success banner/badge |
+| Warning | `semantic.warning` + `semantic.onWarning` | Warning banner/badge |
+| Error | `colorScheme.error` + `onError` | Error states, destructive actions |
+| Disabled | `colorScheme.onSurface` with opacity | Disabled buttons/text |
+
+> Do NOT introduce new color meanings without approval and documentation.
+
+### 2.3 Semantic Tokens (Project-Defined)
+
+If material 3 does not provide a semantic token (e.g success/warning), define it once and reuse.
+
+**Allowed Patterns:**
+
+- `ThemeExtension<AppSemanticColors>`
+- Central `AppColors` 
+
+**Not Allowed:**
+
+- Do NOT define any color token inside any widget.
