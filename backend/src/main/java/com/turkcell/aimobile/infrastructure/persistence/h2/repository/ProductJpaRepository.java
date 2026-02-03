@@ -20,15 +20,23 @@ public interface ProductJpaRepository extends JpaRepository<ProductEntity, Strin
 
         // Active-only variants
         Page<ProductEntity> findByIsActiveTrue(Pageable pageable);
+        Page<ProductEntity> findByIsActiveTrueAndCategoryId(String categoryId, Pageable pageable);
 
         @Query("SELECT p FROM ProductEntity p WHERE (" +
             "LOWER(p.name) LIKE LOWER(CONCAT('%', :q, '%')) OR " +
             "LOWER(p.sku) LIKE LOWER(CONCAT('%', :q, '%')) OR " +
             "LOWER(p.description) LIKE LOWER(CONCAT('%', :q, '%'))" +
             ") AND p.isActive = TRUE")
-        Page<ProductEntity> searchActive(@Param("q") String q, Pageable pageable);
+            Page<ProductEntity> searchActive(@Param("q") String q, Pageable pageable);
+            @Query("SELECT p FROM ProductEntity p WHERE (" +
+                "LOWER(p.name) LIKE LOWER(CONCAT('%', :q, '%')) OR " +
+                "LOWER(p.sku) LIKE LOWER(CONCAT('%', :q, '%')) OR " +
+                "LOWER(p.description) LIKE LOWER(CONCAT('%', :q, '%'))" +
+                ") AND p.isActive = TRUE AND p.categoryId = :categoryId")
+            Page<ProductEntity> searchActiveByCategory(@Param("q") String q, @Param("categoryId") String categoryId, Pageable pageable);
 
         Optional<ProductEntity> findByIdAndIsActiveTrue(String id);
 
         long countByIsActiveTrue();
+        long countByIsActiveTrueAndCategoryId(String categoryId);
 }

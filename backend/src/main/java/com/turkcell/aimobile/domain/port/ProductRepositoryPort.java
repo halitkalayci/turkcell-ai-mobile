@@ -35,4 +35,9 @@ public interface ProductRepositoryPort {
     void deleteById(String id);
 
     long count();
+
+    // v2: category-aware active-only operations
+    List<Product> findAllByCategory(String categoryId, int page, int size, String sortBy, boolean asc);
+    List<Product> searchByCategory(String categoryId, String q, int page, int size, String sortBy, boolean asc);
+    long countByCategory(String categoryId);
 }

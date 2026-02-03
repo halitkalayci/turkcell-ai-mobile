@@ -68,4 +68,25 @@ public class ProductRepositoryJpaAdapter implements ProductRepositoryPort {
     public long count() {
         return jpaRepository.countByIsActiveTrue();
     }
+
+    @Override
+    public List<Product> findAllByCategory(String categoryId, int page, int size, String sortBy, boolean asc) {
+        Sort sort = Sort.by(asc ? Sort.Direction.ASC : Sort.Direction.DESC, sortBy == null ? "createdAt" : sortBy);
+        return jpaRepository.findByIsActiveTrueAndCategoryId(categoryId, PageRequest.of(page, size, sort))
+                .map(mapper::toDomain)
+                .getContent();
+    }
+
+    @Override
+    public List<Product> searchByCategory(String categoryId, String q, int page, int size, String sortBy, boolean asc) {
+        Sort sort = Sort.by(asc ? Sort.Direction.ASC : Sort.Direction.DESC, sortBy == null ? "createdAt" : sortBy);
+        return jpaRepository.searchActiveByCategory(q, categoryId, PageRequest.of(page, size, sort))
+                .map(mapper::toDomain)
+                .getContent();
+    }
+
+    @Override
+    public long countByCategory(String categoryId) {
+        return jpaRepository.countByIsActiveTrueAndCategoryId(categoryId);
+    }
 }

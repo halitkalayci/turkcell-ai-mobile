@@ -10,6 +10,8 @@ public class Product {
     private Double price;
     private String currency;
     private Boolean isActive;
+    private String categoryId;
+    private String imageUrl;
     private Instant createdAt;
     private Instant updatedAt;
 
@@ -67,6 +69,22 @@ public class Product {
 
     public void setIsActive(Boolean isActive) {
         this.isActive = isActive;
+    }
+
+    public String getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(String categoryId) {
+        this.categoryId = categoryId;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 
     public Instant getCreatedAt() {

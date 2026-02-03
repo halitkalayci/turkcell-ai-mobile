@@ -13,6 +13,8 @@ public class ProductEntityMapper {
         p.setPrice(e.getPrice());
         p.setCurrency(e.getCurrency());
         p.setIsActive(e.getIsActive());
+        p.setCategoryId(e.getCategoryId());
+        p.setImageUrl(e.getImageUrl());
         p.setCreatedAt(e.getCreatedAt());
         p.setUpdatedAt(e.getUpdatedAt());
         return p;
@@ -27,6 +29,8 @@ public class ProductEntityMapper {
         e.setPrice(p.getPrice());
         e.setCurrency(p.getCurrency());
         e.setIsActive(p.getIsActive());
+        e.setCategoryId(p.getCategoryId());
+        e.setImageUrl(p.getImageUrl());
         e.setCreatedAt(p.getCreatedAt());
         e.setUpdatedAt(p.getUpdatedAt());
         return e;

@@ -1,0 +1,240 @@
+openapi: 3.0.3
+info:
+  title: Products API
+  version: 2.0.0
+servers:
+  - url: /api/v2
+paths:
+  /products:
+    get:
+      summary: List products
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 0
+          required: false
+          example: 0
+        - in: query
+          name: size
+          schema:
+            type: integer
+            minimum: 1
+          required: false
+          example: 20
+        - in: query
+          name: q
+          schema:
+            type: string
+          required: false
+        - in: query
+          name: categoryId
+          schema:
+            type: string
+          required: false
+        - in: query
+          name: sort
+          schema:
+            type: string
+          required: false
+          description: Comma format field,dir (e.g., createdAt,desc)
+      responses:
+        '200':
+          description: Paged product list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedProductResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      summary: Create product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProductRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /products/{id}:
+    get:
+      summary: Get product by id
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: Update product
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProductRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    CreateProductRequest:
+      type: object
+      required: [name, price, currency, categoryId]
+      properties:
+        name:
+          type: string
+        sku:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          format: double
+        currency:
+          type: string
+        isActive:
+          type: boolean
+          default: true
+        categoryId:
+          type: string
+        imageUrl:
+          type: string
+    UpdateProductRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        sku:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          format: double
+        currency:
+          type: string
+        isActive:
+          type: boolean
+        categoryId:
+          type: string
+        imageUrl:
+          type: string
+    ProductResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        sku:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          format: double
+        currency:
+          type: string
+        isActive:
+          type: boolean
+        categoryId:
+          type: string
+        imageUrl:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    PagedProductResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductResponse'
+        page:
+          type: integer
+        size:
+          type: integer
+        totalItems:
+          type: integer
+        totalPages:
+          type: integer
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          example: CONFLICT
+        message:
+          type: string
+        details:
+          type: array
+          items:
+            type: string
+        correlationId:
+          type: string
+        timestamp:
+          type: string
+          format: date-time

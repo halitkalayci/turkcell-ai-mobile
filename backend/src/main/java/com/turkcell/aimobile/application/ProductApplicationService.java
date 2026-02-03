@@ -39,6 +39,26 @@ public class ProductApplicationService {
         return repository.count();
     }
 
+    // v2: list with optional category filter
+    public List<Product> listV2(Integer page, Integer size, String q, String categoryId, String sortBy, boolean asc) {
+        int p = page == null ? 0 : page;
+        int s = size == null ? 20 : size;
+        if (categoryId != null && !categoryId.isBlank()) {
+            if (q != null && !q.isBlank()) {
+                return repository.searchByCategory(categoryId, q, p, s, sortBy, asc);
+            }
+            return repository.findAllByCategory(categoryId, p, s, sortBy, asc);
+        }
+        return list(p, s, q, sortBy, asc);
+    }
+
+    public long countV2(String categoryId) {
+        if (categoryId != null && !categoryId.isBlank()) {
+            return repository.countByCategory(categoryId);
+        }
+        return repository.count();
+    }
+
     public Product getById(String id) {
         return repository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException("Product not found: " + id));
